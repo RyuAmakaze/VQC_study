@@ -7,11 +7,12 @@ from qcl_utils import create_time_evol_gate, min_max_scaling, softmax
 
 class QclClassification:
     """ quantum circuit learningを用いて分類問題を解く"""
-    def __init__(self, nqubit, c_depth, num_class):
+    def __init__(self, nqubit, c_depth, num_class=None):
         """
         :param nqubit: qubitの数。必要とする出力の次元数よりも多い必要がある
         :param c_depth: circuitの深さ
-        :param num_class: 分類の数（=測定するqubitの数）
+        :param num_class: 分類の数（=測定するqubitの数）。``None``の場合は
+                          ``fit`` 時に ``y_list`` から自動で決定する。
         """
         self.nqubit = nqubit
         self.c_depth = c_depth
@@ -23,10 +24,15 @@ class QclClassification:
 
         self.num_class = num_class  # 分類の数（=測定するqubitの数）
 
-        # オブザーバブルの準備
-        obs = [Observable(nqubit) for _ in range(num_class)]
+        self.obs = None
+        if self.num_class is not None:
+            self._initialize_observable()
+
+    def _initialize_observable(self):
+        """num_classに応じてオブザーバブルを準備"""
+        obs = [Observable(self.nqubit) for _ in range(self.num_class)]
         for i in range(len(obs)):
-            obs[i].add_operator(1., f'Z {i}')  # Z0, Z1, Z3をオブザーバブルとして設定
+            obs[i].add_operator(1., f'Z {i}')
         self.obs = obs
 
     def create_input_gate(self, x):
@@ -142,6 +148,16 @@ class QclClassification:
         :return: 学習後のパラメータthetaの値
         """
 
+        # num_classが未設定ならy_listから決定
+        if self.num_class is None:
+            self.num_class = y_list.shape[1]
+            self._initialize_observable()
+        elif self.obs is None:
+            self._initialize_observable()
+        # y_listの次元がnum_classと一致しているか確認
+        if y_list.shape[1] != self.num_class:
+            raise ValueError("y_list and num_class mismatch")
+
         # 初期状態生成
         self.set_input_state(x_list)
 
@@ -194,13 +210,15 @@ def main():
 
     nqubit = 4  # qubitの数。入出力の次元数よりも多い必要がある
     c_depth = 2  # circuitの深さ
-    num_class = 3
 
-    qcl = QclClassification(nqubit, c_depth, num_class)
-
+    # データセットの作成 (ここでは4クラス分類のダミーデータ)
+    num_class = 4
     n_sample = 10
     x_list = np.random.rand(n_sample, 4)
     y_list = np.eye(num_class)[np.random.randint(num_class, size=(n_sample,))]
+
+    # num_class=None としてインスタンス化し、データセットから自動決定
+    qcl = QclClassification(nqubit, c_depth, num_class=None)
 
     qcl.fit(x_list, y_list)
 
