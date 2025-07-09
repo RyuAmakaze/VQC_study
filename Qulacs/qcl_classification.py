@@ -30,21 +30,17 @@ class QclClassification:
         self.obs = obs
 
     def create_input_gate(self, x):
-        # 単一のxをエンコードするゲートを作成する関数
-        # xは入力特徴量(2次元)
+        """入力$x$をエンコードする量子回路を生成する"""
         # xの要素は[-1, 1]の範囲内
         u = QuantumCircuit(self.nqubit)
-                
+
         angle_y = np.arcsin(x)
         angle_z = np.arccos(x**2)
 
         for i in range(self.nqubit):
-            if i % 2 == 0:
-                u.add_RY_gate(i, angle_y[0])
-                u.add_RZ_gate(i, angle_z[0])
-            else:
-                u.add_RY_gate(i, angle_y[1])
-                u.add_RZ_gate(i, angle_z[1])
+            idx = i % len(x)
+            u.add_RY_gate(i, angle_y[idx])
+            u.add_RZ_gate(i, angle_z[idx])
         
         return u
 
@@ -196,14 +192,14 @@ def main():
     # 乱数発生器の初期化
     np.random.seed(random_seed)
 
-    nqubit = 3  # qubitの数。入出力の次元数よりも多い必要がある
+    nqubit = 4  # qubitの数。入出力の次元数よりも多い必要がある
     c_depth = 2  # circuitの深さ
     num_class = 3
 
     qcl = QclClassification(nqubit, c_depth, num_class)
 
     n_sample = 10
-    x_list = np.random.rand(n_sample, 2)
+    x_list = np.random.rand(n_sample, 4)
     y_list = np.eye(num_class)[np.random.randint(num_class, size=(n_sample,))]
 
     qcl.fit(x_list, y_list)
