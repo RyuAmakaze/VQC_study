@@ -53,13 +53,12 @@ def create_time_evol_gate(nqubit, time_step=0.77):
     return time_evol_gate
 
 
-def min_max_scaling(x, axis=None):
-    """[-1, 1]の範囲に規格化"""
-    min = x.min(axis=axis, keepdims=True)
-    max = x.max(axis=axis, keepdims=True)
-    result = (x-min)/(max-min)
-    result = 2.*result-1.
-    return result
+def min_max_scaling(x, axis=0):
+    """Scale each feature of ``x`` to [-1, 1]."""
+    min_val = x.min(axis=axis, keepdims=True)
+    max_val = x.max(axis=axis, keepdims=True)
+    scaled = (x - min_val) / (max_val - min_val)
+    return 2.0 * scaled - 1.0
 
 
 def softmax(x):

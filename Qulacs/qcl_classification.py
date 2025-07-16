@@ -52,7 +52,7 @@ class QclClassification:
 
     def set_input_state(self, x_list):
         """入力状態のリストを作成"""
-        x_list_normalized = min_max_scaling(x_list)  # xを[-1, 1]の範囲にスケール
+        x_list_normalized = min_max_scaling(x_list)  # xを[-1, 1]の範囲に特徴量ごとスケール
         
         st_list = []
         
