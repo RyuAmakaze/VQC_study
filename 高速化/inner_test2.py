@@ -35,6 +35,11 @@ def main():
         grads_complex = circuit.backprop_inner_product(target_state)
         grads = []
 
+        vec = target_state.get_vector()
+        for i, amp in enumerate(vec):
+            if abs(amp) > 1e-6:
+                print(f"Index {i}: amplitude = {amp}")
+
         for dψ_dθ in grads_complex:
             grad = -2 * np.real(np.conj(amp) * dψ_dθ) / (prob + 1e-10)
             grads.append(grad)
